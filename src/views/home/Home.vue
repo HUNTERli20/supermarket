@@ -3,34 +3,25 @@
     <nav-bar class="home-nav">
       <div slot="center">购物街</div>
     </nav-bar>
-    <home-swiper :banners="banner"></home-swiper>
-    <recommend-view :recommends="recommend"></recommend-view>
-    <home-feature />
-    <tabbar-control
-      class="tabbar-control"
-      :titles="['流行', '新款', '精选']"
-    ></tabbar-control>
-    <good-list
-    :goods="homeData['pop'].list"></good-list>
-    <ul>
-      <li>1</li>
-      <li>2</li>
-      <li>3</li>
-      <li>4</li>
-      <li>5</li>
-      <li>6</li>
-      <li>7</li>
-      <li>8</li>
-      <li>9</li>
-    </ul>
+    <scroll class="content">
+      <home-swiper :banners="banner"></home-swiper>
+      <recommend-view :recommends="recommend"></recommend-view>
+      <home-feature />
+      <tabbar-control
+        class="tabbar-control"
+        :titles="['流行', '新款', '精选']"
+        @itemClick="itemClick"
+      ></tabbar-control>
+      <good-list :goods="showProductImage"></good-list>
+    </scroll>
   </div>
 </template>
-
 <script>
 // 公共组件
 import NavBar from "components/common/navbar/NavBar";
 import TabbarControl from "components/content/tabbarcontrol/TabbarControl";
-import GoodList from "components/content/goodlist/GoodList"
+import GoodList from "components/content/goodlist/GoodList";
+import Scroll from "components/common/scroll/Scroll";
 // 网络请求组件
 import { getHomeMultidata, getHomeData } from "network/home";
 // Home子组件
@@ -58,23 +49,28 @@ export default {
           list: [],
         },
       },
+      currentIndex: 0,
     };
   },
   components: {
     NavBar,
     TabbarControl,
     HomeSwiper,
+    Scroll,
     RecommendView,
     HomeFeature,
-    GoodList
+    GoodList,
   },
   created() {
     this.getMultiData(),
-    this.getProductData("pop"),
-    this.getProductData("new"),
-    this.getProductData("sell")
+      this.getProductData("pop"),
+      this.getProductData("new"),
+      this.getProductData("sell");
   },
   methods: {
+    /**
+     * 网络请求
+     */
     getMultiData() {
       getHomeMultidata().then((res) => {
         // console.log(res.data.banner.list);
@@ -83,14 +79,34 @@ export default {
       });
     },
     getProductData(type) {
-      const page = this.homeData[type].page + 1
-      getHomeData(type, page).then(res => {
+      const page = this.homeData[type].page + 1;
+      getHomeData(type, page).then((res) => {
         // console.log(res);
         console.log(res);
         this.homeData[type].list.push(...res.data.list);
         this.homeData[type].page += 1;
-      })
-    }
+      });
+    },
+    /**
+     * 事件
+     */
+    itemClick(index) {
+      this.currentIndex = index;
+    },
+  },
+  computed: {
+    showProductImage() {
+      switch (this.currentIndex) {
+        case 0:
+          return this.homeData["pop"].list;
+          break;
+        case 1:
+          return this.homeData["new"].list;
+          break;
+        case 2:
+          return this.homeData["sell"].list;
+      }
+    },
   },
 };
 </script>
@@ -98,6 +114,8 @@ export default {
 <style scoped>
 #home {
   padding-top: 44px;
+  height: 100vh;
+  position: relative;
 }
 .home-nav {
   position: fixed;
@@ -111,5 +129,13 @@ export default {
 .tabbar-control {
   position: sticky;
   top: 44px;
+}
+.content {
+  overflow: hidden;
+  position: absolute;
+  top: 44px;
+  bottom: 49px;
+  left: 0;
+  right: 0;
 }
 </style>
